@@ -1,0 +1,28 @@
+package com.udacity.asteroidradar.repository
+
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.map
+import com.udacity.asteroidradar.api.RadarApi
+import com.udacity.asteroidradar.api.parseAsteroidsJsonResult
+import com.udacity.asteroidradar.database.RadarDatabase
+import com.udacity.asteroidradar.database.asDomainModel
+import com.udacity.asteroidradar.domain.Asteroid
+import com.udacity.asteroidradar.domain.asDatabaseModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import org.json.JSONObject
+
+class AsteroidRepository(private val database: RadarDatabase) {
+
+    val asteroids: LiveData<List<Asteroid>> =
+        database.asteroid.getAsteroids().map { it.asDomainModel() }
+
+    suspend fun refreshFeed(startDate: String, endDate: String, apiKey: String) {
+        withContext(Dispatchers.IO) {
+            val feedJsonString = RadarApi.asteroid.getFeed(startDate, endDate, apiKey)
+            val feedJson = JSONObject(feedJsonString)
+            val listData = parseAsteroidsJsonResult(feedJson)
+            database.asteroid.insertAll(*listData.asDatabaseModel())
+        }
+    }
+}
