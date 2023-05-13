@@ -1,13 +1,13 @@
 package com.udacity.asteroidradar.database
 
 import android.content.Context
-import androidx.lifecycle.LiveData
 import androidx.room.*
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface AsteroidDao {
     @Query("select * from asteroid_table")
-    fun getAsteroids(): LiveData<List<AsteroidEntity>>
+    fun getAsteroids(): Flow<List<AsteroidEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertAll(vararg asteroids: AsteroidEntity)
