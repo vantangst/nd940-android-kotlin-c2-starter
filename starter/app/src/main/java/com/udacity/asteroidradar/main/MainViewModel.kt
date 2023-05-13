@@ -1,17 +1,20 @@
 package com.udacity.asteroidradar.main
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.udacity.asteroidradar.Constants
 import com.udacity.asteroidradar.database.getDatabase
 import com.udacity.asteroidradar.domain.Asteroid
+import com.udacity.asteroidradar.domain.MediaType
+import com.udacity.asteroidradar.domain.Planetary
+import com.udacity.asteroidradar.extension.getCurrentDate
 import com.udacity.asteroidradar.repository.AsteroidRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Calendar
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -24,31 +27,39 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val navigateToAsteroidDetailEventFlow: SharedFlow<Asteroid>
         get() = _navigateToAsteroidDetailEventFlow
 
-
-    val imageOfTheDay = "https://apod.nasa.gov/apod/image/2305/AS17-152-23420_Ord1024c.jpg"
+    private val _pictureOfTheDayDataFlow = MutableStateFlow(Planetary())
+    val pictureOfTheDayDataFlow: StateFlow<Planetary>
+        get() = _pictureOfTheDayDataFlow
 
     init {
-        getFeed()
+        refreshFeed()
+        getImageOfADay()
     }
 
-    private fun getFeed() {
+    private fun refreshFeed() {
         viewModelScope.launch(Dispatchers.IO) {
             asteroidRepository.refreshFeed(
-                getDate(),
-                getDate(Constants.DEFAULT_END_DATE_DAYS),
+                Calendar.getInstance().getCurrentDate(),
+                Calendar.getInstance().getCurrentDate(Constants.DEFAULT_END_DATE_DAYS),
                 Constants.API_KEY
             )
         }
     }
 
-    private fun getDate(plush: Int? = null): String {
-        val calendar = Calendar.getInstance()
-        plush?.let {
-            calendar.add(Calendar.DAY_OF_YEAR, plush)
+
+    private fun getImageOfADay() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                asteroidRepository.getPlanetaryApod(Constants.API_KEY).let {
+                    if (it.media_type == MediaType.Image.value) {
+                        _pictureOfTheDayDataFlow.emit(it)
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Log.e("MainViewModel", "getImageOfADay ERROR: ${e.localizedMessage}")
+            }
         }
-        val currentTime = calendar.time
-        val dateFormat = SimpleDateFormat(Constants.API_QUERY_DATE_FORMAT, Locale.getDefault())
-        return dateFormat.format(currentTime)
     }
 
     fun onAsteroidClicked(asteroid: Asteroid) {
