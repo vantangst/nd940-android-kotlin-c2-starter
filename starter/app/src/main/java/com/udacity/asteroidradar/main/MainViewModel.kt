@@ -21,11 +21,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val database = getDatabase(application)
     private val asteroidRepository = AsteroidRepository(database)
 
-    val asteroidsDataFlow = asteroidRepository.asteroids
-
     private val _navigateToAsteroidDetailEventFlow = MutableSharedFlow<Asteroid>()
     val navigateToAsteroidDetailEventFlow: SharedFlow<Asteroid>
         get() = _navigateToAsteroidDetailEventFlow
+
+    private val _asteroidsDataFlow = MutableStateFlow<List<Asteroid>>(emptyList())
+    val asteroidsDataFlow: MutableStateFlow<List<Asteroid>>
+        get() = _asteroidsDataFlow
 
     private val _pictureOfTheDayDataFlow = MutableStateFlow(Planetary())
     val pictureOfTheDayDataFlow: StateFlow<Planetary>
@@ -34,6 +36,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     init {
         refreshFeed()
         getImageOfADay()
+        getAsteroids(AsteroidFilter.WEEK)
     }
 
     private fun refreshFeed() {
@@ -65,6 +68,33 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun onAsteroidClicked(asteroid: Asteroid) {
         viewModelScope.launch {
             _navigateToAsteroidDetailEventFlow.emit(asteroid)
+        }
+    }
+
+    fun getAsteroids(filter: AsteroidFilter) {
+        var startDate: String? = null
+        var endDate: String? = null
+        when (filter) {
+            AsteroidFilter.WEEK -> {
+                startDate = Calendar.getInstance().getCurrentDate()
+                endDate = Calendar.getInstance().getCurrentDate(Constants.DEFAULT_END_DATE_DAYS)
+            }
+            AsteroidFilter.ALL -> {
+                startDate = null
+                endDate = null
+            }
+            AsteroidFilter.TODAY -> {
+                startDate = Calendar.getInstance().getCurrentDate()
+            }
+        }
+        viewModelScope.launch {
+            asteroidRepository.getAsteroids(startDate, endDate)
+                .catch {
+                    it.printStackTrace()
+                }
+                .collect {
+                    _asteroidsDataFlow.emit(it)
+                }
         }
     }
 }

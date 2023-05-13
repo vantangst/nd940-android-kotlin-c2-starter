@@ -23,7 +23,7 @@ class MainFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         val binding = FragmentMainBinding.inflate(inflater)
-        binding.lifecycleOwner = this
+        binding.lifecycleOwner = viewLifecycleOwner
 
         binding.viewModel = viewModel
 
@@ -59,6 +59,17 @@ class MainFragment : Fragment() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.show_all_menu -> {
+                viewModel.getAsteroids(AsteroidFilter.ALL)
+            }
+            R.id.show_week_menu -> {
+                viewModel.getAsteroids(AsteroidFilter.WEEK)
+            }
+            R.id.show_today_menu -> {
+                viewModel.getAsteroids(AsteroidFilter.TODAY)
+            }
+        }
         return true
     }
 }

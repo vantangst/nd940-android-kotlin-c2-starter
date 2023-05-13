@@ -16,8 +16,18 @@ import org.json.JSONObject
 
 class AsteroidRepository(private val database: RadarDatabase) {
 
-    val asteroids: Flow<List<Asteroid>> =
-        database.asteroid.getAsteroids().map { it.asDomainModel() }
+    fun getAsteroids(startDate: String? = null, endDate: String? = null): Flow<List<Asteroid>> {
+        val asteroids = startDate?.let { startTime ->
+            endDate?.let { endTime ->
+                database.asteroid.getAsteroids(startTime, endTime)
+            } ?: run {
+                database.asteroid.getAsteroids(startTime)
+            }
+        } ?: run {
+            database.asteroid.getAsteroids()
+        }
+        return asteroids.map { it.asDomainModel() }
+    }
 
     suspend fun refreshFeed(startDate: String, endDate: String, apiKey: String) {
         withContext(Dispatchers.IO) {

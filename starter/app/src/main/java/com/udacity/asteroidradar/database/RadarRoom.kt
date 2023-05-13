@@ -9,6 +9,12 @@ interface AsteroidDao {
     @Query("select * from asteroid_table")
     fun getAsteroids(): Flow<List<AsteroidEntity>>
 
+    @Query("select * from asteroid_table where closeApproachDate = :date")
+    fun getAsteroids(date: String): Flow<List<AsteroidEntity>>
+
+    @Query("select * from asteroid_table where closeApproachDate between :startDate and :endDate")
+    fun getAsteroids(startDate: String, endDate: String): Flow<List<AsteroidEntity>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertAll(vararg asteroids: AsteroidEntity)
 }

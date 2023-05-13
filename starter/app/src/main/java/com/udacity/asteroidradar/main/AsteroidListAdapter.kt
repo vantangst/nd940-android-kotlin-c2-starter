@@ -49,3 +49,5 @@ class AsteroidDiffCallback : DiffUtil.ItemCallback<Asteroid>() {
 class AsteroidClickListener(val clickListener: (asteroid: Asteroid) -> Unit) {
     fun onClick(asteroid: Asteroid) = clickListener(asteroid)
 }
+
+enum class AsteroidFilter(val value: String) { WEEK("week"), TODAY("today"), ALL("all") }
