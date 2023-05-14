@@ -44,12 +44,14 @@
         <ImageView
             android:id="@+id/ivAsteroidStatus"
             statusIcon="@{asteroid.potentiallyHazardous}"
+            statusDescription="@{asteroid.potentiallyHazardous}"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            tools:src="@drawable/ic_status_normal" />
+            tools:src="@drawable/ic_status_normal"
+            tools:ignore="ContentDescription" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>
